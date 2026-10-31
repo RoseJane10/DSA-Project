@@ -18,3 +18,18 @@ std::vector<Item> binarySearchPriceRange(
     double minPrice,
     double maxPrice
 );
+
+// Lab 8: Insertion Sort by Brand
+std::vector<Item> insertionSortByBrand(
+    const std::vector<Item>& products
+);
+
+// Lab 8: Quick Sort by Price
+std::vector<Item> quickSortByPrice(
+    const std::vector<Item>& products
+);
+
+// Lab 8: Quick Sort by Stock
+std::vector<Item> quickSortByStock(
+    const std::vector<Item>& products
+);

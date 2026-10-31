@@ -75,6 +75,7 @@ int main() {
         cout << "1. View Complete Catalog\n";
         cout << "2. Search Products by Keyword\n";
         cout << "3. Filter Products by Price Range\n";
+        cout << "4. Sort Inventory\n";
         cout << "0. Exit\n";
 
         cout << "============================================\n";
@@ -173,6 +174,78 @@ int main() {
          << minPrice << " - " << maxPrice << "\n";
 
     displayProducts(results);
+
+    break;
+}
+
+case 4: {
+
+    int sortChoice;
+
+    cout << "\n========== INVENTORY SORTING ==========\n";
+    cout << "1. Sort by Brand (Insertion Sort)\n";
+    cout << "2. Sort by Price (Quick Sort)\n";
+    cout << "3. Sort by Stock (Quick Sort)\n";
+    cout << "0. Back to Main Menu\n";
+
+    cout << "Enter your choice: ";
+
+    if (!(cin >> sortChoice)) {
+
+        cout << "\nInvalid input. Please enter a number.\n";
+
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        break;
+    }
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    vector<Item> sortedProducts;
+
+    switch (sortChoice) {
+
+        case 1:
+
+            sortedProducts = insertionSortByBrand(products);
+
+            cout << "\n========== SORTED BY BRAND ==========\n";
+
+            displayProducts(sortedProducts);
+
+            break;
+
+        case 2:
+
+            sortedProducts = quickSortByPrice(products);
+
+            cout << "\n========== SORTED BY PRICE ==========\n";
+
+            displayProducts(sortedProducts);
+
+            break;
+
+        case 3:
+
+            sortedProducts = quickSortByStock(products);
+
+            cout << "\n========== SORTED BY STOCK ==========\n";
+
+            displayProducts(sortedProducts);
+
+            break;
+
+        case 0:
+
+            cout << "\nReturning to main menu...\n";
+
+            break;
+
+        default:
+
+            cout << "\nInvalid sorting option.\n";
+    }
 
     break;
 }
