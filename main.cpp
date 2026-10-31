@@ -2,15 +2,35 @@
 #include "Database.h"
 #include "InventoryRepository.h"
 #include "DSAComponents.h"
-#include <cmath>
+#include "ShoppingCart.h"
 
 #include <iostream>
 #include <iomanip>
 #include <vector>
 #include <string>
 #include <limits>
+#include <cmath>
 
 using namespace std;
+
+// Read an integer safely.
+bool readInteger(const string& prompt, int& value) {
+
+    cout << prompt;
+
+    if (!(cin >> value)) {
+        cout << "\nInvalid input. Please enter a valid number.\n";
+
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        return false;
+    }
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    return true;
+}
 
 // Display products in a table.
 void displayProducts(const vector<Item>& products) {
@@ -35,9 +55,9 @@ void displayProducts(const vector<Item>& products) {
 
         cout << left
              << setw(5) << product.getId()
-             << setw(30) << product.getName()
-             << setw(25) << product.getBrand()
-             << setw(15) << product.getCategory()
+             << setw(30) << product.getName().substr(0, 28)
+             << setw(25) << product.getBrand().substr(0, 23)
+             << setw(15) << product.getCategory().substr(0, 13)
              << setw(12) << fixed << setprecision(2)
              << product.getPrice()
              << product.getStock()
@@ -45,6 +65,173 @@ void displayProducts(const vector<Item>& products) {
     }
 
     cout << "\nTotal Products: " << products.size() << "\n";
+}
+
+// Shopping cart submenu.
+void shoppingCartMenu(ShoppingCart& cart, const vector<Item>& products) {
+
+    int choice = -1;
+
+    do {
+
+        cout << "\n============================================\n";
+        cout << "              SHOPPING CART\n";
+        cout << "============================================\n";
+
+        cout << "1. Add Item to Cart\n";
+        cout << "2. View Shopping Cart\n";
+        cout << "3. Remove Item from Cart\n";
+        cout << "4. Update Item Quantity\n";
+        cout << "5. Navigate Forward\n";
+        cout << "6. Navigate Backward\n";
+        cout << "7. Display Cart Total\n";
+        cout << "0. Back to Main Menu\n";
+
+        cout << "============================================\n";
+
+        if (!readInteger("Enter your choice: ", choice)) {
+            continue;
+        }
+
+        switch (choice) {
+
+            // Add item.
+            case 1: {
+
+                int productId;
+                int quantity;
+
+                cout << "\n========== ADD ITEM TO CART ==========\n";
+
+                if (!readInteger("Enter Product ID: ", productId)) {
+                    break;
+                }
+
+                // Find the product in the inventory.
+                const Item* selectedItem = nullptr;
+
+                for (const Item& product : products) {
+
+                    if (product.getId() == productId) {
+                        selectedItem = &product;
+                        break;
+                    }
+                }
+
+                if (selectedItem == nullptr) {
+                    cout << "\nProduct ID not found in inventory.\n";
+                    break;
+                }
+
+                cout << "\nProduct: " << selectedItem->getName() << "\n";
+                cout << "Brand: " << selectedItem->getBrand() << "\n";
+                cout << "Price: P" << fixed << setprecision(2)
+                     << selectedItem->getPrice() << "\n";
+                cout << "Available Stock: "
+                     << selectedItem->getStock() << "\n";
+
+                if (!readInteger("Enter quantity: ", quantity)) {
+                    break;
+                }
+
+                cart.addItem(*selectedItem, quantity);
+
+                break;
+            }
+
+            // View cart.
+            case 2: {
+
+                cout << "\n========== VIEW SHOPPING CART ==========\n";
+
+                cart.displayCart();
+
+                break;
+            }
+
+            // Remove item.
+            case 3: {
+
+                int productId;
+
+                cout << "\n========== REMOVE CART ITEM ==========\n";
+
+                if (!readInteger("Enter Product ID to remove: ", productId)) {
+                    break;
+                }
+
+                cart.removeItem(productId);
+
+                break;
+            }
+
+            // Update quantity.
+            case 4: {
+
+                int productId;
+                int quantity;
+
+                cout << "\n========== UPDATE CART QUANTITY ==========\n";
+
+                if (!readInteger("Enter Product ID: ", productId)) {
+                    break;
+                }
+
+                if (!readInteger("Enter new quantity: ", quantity)) {
+                    break;
+                }
+
+                cart.updateQuantity(productId, quantity);
+
+                break;
+            }
+
+            // Navigate forward.
+            case 5: {
+
+                cout << "\n========== FORWARD NAVIGATION ==========\n";
+
+                cart.displayForward();
+
+                break;
+            }
+
+            // Navigate backward.
+            case 6: {
+
+                cout << "\n========== BACKWARD NAVIGATION ==========\n";
+
+                cart.displayBackward();
+
+                break;
+            }
+
+            // Display total.
+            case 7: {
+
+                cout << "\n========== CART TOTAL ==========\n";
+
+                cout << "Total Products: " << cart.getSize() << "\n";
+
+                cout << "Grand Total: P"
+                     << fixed << setprecision(2)
+                     << cart.calculateTotal() << "\n";
+
+                break;
+            }
+
+            case 0:
+
+                cout << "\nReturning to BEAUTRIX main menu...\n";
+
+                break;
+
+            default:
+
+                cout << "\nInvalid choice. Please try again.\n";
+        }
+
+    } while (choice != 0);
 }
 
 int main() {
@@ -64,7 +251,10 @@ int main() {
         return 1;
     }
 
-    int choice;
+    // Create one shopping cart for this application session.
+    ShoppingCart cart;
+
+    int choice = -1;
 
     do {
 
@@ -76,24 +266,18 @@ int main() {
         cout << "2. Search Products by Keyword\n";
         cout << "3. Filter Products by Price Range\n";
         cout << "4. Sort Inventory\n";
+        cout << "5. Shopping Cart (Doubly Linked List)\n";
         cout << "0. Exit\n";
 
         cout << "============================================\n";
-        cout << "Enter your choice: ";
 
-        if (!(cin >> choice)) {
-            cout << "\nInvalid input. Please enter a number.\n";
-
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
+        if (!readInteger("Enter your choice: ", choice)) {
             continue;
         }
 
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
         switch (choice) {
 
+            // Complete catalog.
             case 1: {
 
                 cout << "\n========== COMPLETE PRODUCT CATALOG ==========\n";
@@ -103,6 +287,7 @@ int main() {
                 break;
             }
 
+            // Linear search.
             case 2: {
 
                 string keyword;
@@ -127,132 +312,135 @@ int main() {
                 break;
             }
 
+            // Binary search price filter.
             case 3: {
 
-    double minPrice;
-    double maxPrice;
+                double minPrice;
+                double maxPrice;
 
-    cout << "\n========== BINARY SEARCH: PRICE FILTER ==========\n";
+                cout << "\n========== BINARY SEARCH: PRICE FILTER ==========\n";
 
-    cout << "Enter minimum price: ";
+                cout << "Enter minimum price: ";
 
-    if (!(cin >> minPrice)) {
-        cout << "\nInvalid input. Please enter a valid number.\n";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        break;
-    }
+                if (!(cin >> minPrice)) {
+                    cout << "\nInvalid input. Please enter a valid number.\n";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    break;
+                }
 
-    cout << "Enter maximum price: ";
+                cout << "Enter maximum price: ";
 
-    if (!(cin >> maxPrice)) {
-        cout << "\nInvalid input. Please enter a valid number.\n";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        break;
-    }
+                if (!(cin >> maxPrice)) {
+                    cout << "\nInvalid input. Please enter a valid number.\n";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    break;
+                }
 
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-    if (!isfinite(minPrice) || !isfinite(maxPrice) ||
-        minPrice < 0 || maxPrice < 0) {
+                if (!isfinite(minPrice) || !isfinite(maxPrice) ||
+                    minPrice < 0 || maxPrice < 0) {
 
-        cout << "\nPrices cannot be negative or infinite.\n";
-        break;
-    }
+                    cout << "\nPrices cannot be negative or infinite.\n";
+                    break;
+                }
 
-    if (minPrice > maxPrice) {
-        cout << "\nMinimum price cannot be greater than maximum price.\n";
-        break;
-    }
+                if (minPrice > maxPrice) {
+                    cout << "\nMinimum price cannot be greater than maximum price.\n";
+                    break;
+                }
 
-    vector<Item> results =
-        binarySearchPriceRange(products, minPrice, maxPrice);
+                vector<Item> results =
+                    binarySearchPriceRange(products, minPrice, maxPrice);
 
-    cout << "\n========== PRICE RANGE RESULTS ==========\n";
-    cout << "Price range: " << fixed << setprecision(2)
-         << minPrice << " - " << maxPrice << "\n";
+                cout << "\n========== PRICE RANGE RESULTS ==========\n";
 
-    displayProducts(results);
+                cout << "Price range: " << fixed << setprecision(2)
+                     << minPrice << " - " << maxPrice << "\n";
 
-    break;
-}
+                displayProducts(results);
 
-case 4: {
+                break;
+            }
 
-    int sortChoice;
+            // Inventory sorting.
+            case 4: {
 
-    cout << "\n========== INVENTORY SORTING ==========\n";
-    cout << "1. Sort by Brand (Insertion Sort)\n";
-    cout << "2. Sort by Price (Quick Sort)\n";
-    cout << "3. Sort by Stock (Quick Sort)\n";
-    cout << "0. Back to Main Menu\n";
+                int sortChoice;
 
-    cout << "Enter your choice: ";
+                cout << "\n========== INVENTORY SORTING ==========\n";
 
-    if (!(cin >> sortChoice)) {
+                cout << "1. Sort by Brand (Insertion Sort)\n";
+                cout << "2. Sort by Price (Quick Sort)\n";
+                cout << "3. Sort by Stock (Quick Sort)\n";
+                cout << "0. Back to Main Menu\n";
 
-        cout << "\nInvalid input. Please enter a number.\n";
+                if (!readInteger("Enter your choice: ", sortChoice)) {
+                    break;
+                }
 
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                vector<Item> sortedProducts;
 
-        break;
-    }
+                switch (sortChoice) {
 
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    case 1:
 
-    vector<Item> sortedProducts;
+                        sortedProducts = insertionSortByBrand(products);
 
-    switch (sortChoice) {
+                        cout << "\n========== SORTED BY BRAND ==========\n";
 
-        case 1:
+                        displayProducts(sortedProducts);
 
-            sortedProducts = insertionSortByBrand(products);
+                        break;
 
-            cout << "\n========== SORTED BY BRAND ==========\n";
+                    case 2:
 
-            displayProducts(sortedProducts);
+                        sortedProducts = quickSortByPrice(products);
 
-            break;
+                        cout << "\n========== SORTED BY PRICE ==========\n";
 
-        case 2:
+                        displayProducts(sortedProducts);
 
-            sortedProducts = quickSortByPrice(products);
+                        break;
 
-            cout << "\n========== SORTED BY PRICE ==========\n";
+                    case 3:
 
-            displayProducts(sortedProducts);
+                        sortedProducts = quickSortByStock(products);
 
-            break;
+                        cout << "\n========== SORTED BY STOCK ==========\n";
 
-        case 3:
+                        displayProducts(sortedProducts);
 
-            sortedProducts = quickSortByStock(products);
+                        break;
 
-            cout << "\n========== SORTED BY STOCK ==========\n";
+                    case 0:
 
-            displayProducts(sortedProducts);
+                        cout << "\nReturning to main menu...\n";
 
-            break;
+                        break;
 
-        case 0:
+                    default:
 
-            cout << "\nReturning to main menu...\n";
+                        cout << "\nInvalid sorting option.\n";
+                }
 
-            break;
+                break;
+            }
 
-        default:
+            // Shopping cart.
+            case 5: {
 
-            cout << "\nInvalid sorting option.\n";
-    }
+                shoppingCartMenu(cart, products);
 
-    break;
-}
-        
+                break;
+            }
+
             case 0:
 
                 cout << "\nThank you for using BEAUTRIX!\n";
+
                 break;
 
             default:

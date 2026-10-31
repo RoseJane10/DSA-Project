@@ -26,6 +26,7 @@ add_executable(beautrix
     src/Item.cpp
     src/InventoryRepository.cpp
     src/DSAComponents.cpp
+    src/ShoppingCart.cpp
 )
 
 # Include directories
