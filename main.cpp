@@ -2,6 +2,7 @@
 #include "Database.h"
 #include "InventoryRepository.h"
 #include "DSAComponents.h"
+#include <cmath>
 
 #include <iostream>
 #include <iomanip>
@@ -73,6 +74,7 @@ int main() {
 
         cout << "1. View Complete Catalog\n";
         cout << "2. Search Products by Keyword\n";
+        cout << "3. Filter Products by Price Range\n";
         cout << "0. Exit\n";
 
         cout << "============================================\n";
@@ -124,6 +126,57 @@ int main() {
                 break;
             }
 
+            case 3: {
+
+    double minPrice;
+    double maxPrice;
+
+    cout << "\n========== BINARY SEARCH: PRICE FILTER ==========\n";
+
+    cout << "Enter minimum price: ";
+
+    if (!(cin >> minPrice)) {
+        cout << "\nInvalid input. Please enter a valid number.\n";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        break;
+    }
+
+    cout << "Enter maximum price: ";
+
+    if (!(cin >> maxPrice)) {
+        cout << "\nInvalid input. Please enter a valid number.\n";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        break;
+    }
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    if (!isfinite(minPrice) || !isfinite(maxPrice) ||
+        minPrice < 0 || maxPrice < 0) {
+
+        cout << "\nPrices cannot be negative or infinite.\n";
+        break;
+    }
+
+    if (minPrice > maxPrice) {
+        cout << "\nMinimum price cannot be greater than maximum price.\n";
+        break;
+    }
+
+    vector<Item> results =
+        binarySearchPriceRange(products, minPrice, maxPrice);
+
+    cout << "\n========== PRICE RANGE RESULTS ==========\n";
+    cout << "Price range: " << fixed << setprecision(2)
+         << minPrice << " - " << maxPrice << "\n";
+
+    displayProducts(results);
+
+    break;
+}
+        
             case 0:
 
                 cout << "\nThank you for using BEAUTRIX!\n";
