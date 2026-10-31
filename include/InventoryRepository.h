@@ -11,7 +11,16 @@ private:
     Database& database;
 
 public:
+
     InventoryRepository(Database& database);
 
+    // Retrieve all products from PostgreSQL.
     std::vector<Item> getAllProducts();
+
+    // Update stock only if the current stock matches the expected value.
+    bool updateProductStock(
+        int productId,
+        int expectedStock,
+        int newStock
+    );
 };
