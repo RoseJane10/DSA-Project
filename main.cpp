@@ -14,6 +14,7 @@
 #include <cmath>
 #include <new>
 #include <windows.h>
+#include "AuthSystem.h"
 
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -491,6 +492,31 @@ int main() {
     if (!database.connect()) {
         return 1;
     }
+    
+    // Authenticate user before opening the system.
+AuthSystem authSystem(database);
+AuthenticatedUser currentUser{0, "", ""};
+
+bool authenticated = false;
+
+for (int attempt = 1; attempt <= 3; attempt++) {
+
+    if (authSystem.login(currentUser)) {
+        authenticated = true;
+        break;
+    }
+
+    if (attempt < 3) {
+        cout << "\nLogin attempts remaining: "
+             << (3 - attempt) << "\n";
+    }
+}
+
+if (!authenticated) {
+    cout << "\nMaximum login attempts reached.\n";
+    cout << "Exiting BEAUTRIX...\n";
+    return 0;
+}
 
     InventoryRepository repository(database);
 
@@ -523,14 +549,20 @@ int main() {
         cout << "============================================\n";
         
         setColor(7);
-        cout << "1. View Complete Catalog\n";
-        cout << "2. Search Products by Keyword\n";
-        cout << "3. Filter Products by Price Range\n";
-        cout << "4. Sort Inventory\n";
-        cout << "5. Shopping Cart (Doubly Linked List)\n";
-        cout << "6. Partner Brand Showcase (Circular Linked List)\n";
-        cout << "7. Stock Management & Undo (Stack LIFO)\n";
-        cout << "0. Exit\n";
+       cout << "1. View Complete Catalog\n";
+       cout << "2. Search Products by Keyword\n";
+       cout << "3. Filter Products by Price Range\n";
+       cout << "4. Sort Inventory\n";
+       cout << "5. Shopping Cart (Doubly Linked List)\n";
+       cout << "6. Partner Brand Showcase (Circular Linked List)\n";
+
+      if (currentUser.role == "admin" ||
+      currentUser.role == "staff") {
+
+    cout << "7. Stock Management & Undo (Stack LIFO)\n";
+}
+
+cout << "0. Exit\n";
 
         cout << "============================================\n";
 
@@ -711,10 +743,17 @@ int main() {
             // Stack-based stock update and undo (Lab 4).
             case 7: {
 
-                inventoryUndoMenu(repository, products, undoStack);
+            if (currentUser.role != "admin" &&
+             currentUser.role != "staff") {
 
-                break;
+             cout << "\nAccess denied. Admin or staff account required.\n";
+             break;
             }
+
+    inventoryUndoMenu(repository, products, undoStack);
+
+    break;
+}
 
             case 0:
 
