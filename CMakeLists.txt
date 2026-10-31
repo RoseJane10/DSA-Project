@@ -30,6 +30,7 @@ add_executable(beautrix
     src/BrandShowcase.cpp
     src/InventoryUndoStack.cpp
     src/AuthSystem.cpp
+    src/OrderQueue.cpp
 )
 
 # Include directories
