@@ -24,6 +24,7 @@ add_executable(beautrix
     main.cpp
     src/Database.cpp
     src/Item.cpp
+    src/InventoryRepository.cpp
 )
 
 # Include directories
