@@ -6,9 +6,16 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Keep the role constraint compatible with both a fresh database and the earlier customer role.
-ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
-UPDATE users SET role='user' WHERE role='customer';
-ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','staff','user'));
+ALTER TABLE users
+DROP CONSTRAINT IF EXISTS users_role_check;
+
+UPDATE users
+SET role = 'user'
+WHERE role = 'customer';
+
+ALTER TABLE users
+ADD CONSTRAINT users_role_check
+CHECK (role IN ('admin', 'staff', 'user'));
 
 CREATE TABLE IF NOT EXISTS brands (
     id SERIAL PRIMARY KEY,
