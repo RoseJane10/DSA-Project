@@ -3,6 +3,7 @@
 #include "InventoryRepository.h"
 #include "DSAComponents.h"
 #include "ShoppingCart.h"
+#include "BrandShowcase.h"
 
 #include <iostream>
 #include <iomanip>
@@ -234,6 +235,44 @@ void shoppingCartMenu(ShoppingCart& cart, const vector<Item>& products) {
     } while (choice != 0);
 }
 
+
+// Partner brand showcase submenu (Lab 3: Circular Linked List).
+void brandShowcaseMenu(BrandShowcase& showcase) {
+    int choice = -1;
+
+    do {
+        cout << "\n============================================\n";
+        cout << "          PARTNER BRAND SHOWCASE\n";
+        cout << "============================================\n";
+        cout << "1. Display All Partner Brands\n";
+        cout << "2. Show Next Brand (Circular Cycle)\n";
+        cout << "0. Back to Main Menu\n";
+        cout << "============================================\n";
+
+        if (!readInteger("Enter your choice: ", choice)) {
+            continue;
+        }
+
+        switch (choice) {
+            case 1:
+                showcase.displayAll();
+                break;
+
+            case 2:
+                showcase.displayNext();
+                break;
+
+            case 0:
+                cout << "\nReturning to BEAUTRIX main menu...\n";
+                break;
+
+            default:
+                cout << "\nInvalid choice. Please try again.\n";
+        }
+
+    } while (choice != 0);
+}
+
 int main() {
 
     Database database;
@@ -254,6 +293,12 @@ int main() {
     // Create one shopping cart for this application session.
     ShoppingCart cart;
 
+    // Lab 3: Build a circular linked list of unique product brands.
+    BrandShowcase showcase;
+    for (const Item& product : products) {
+        showcase.addBrand(product.getBrand());
+    }
+
     int choice = -1;
 
     do {
@@ -267,6 +312,7 @@ int main() {
         cout << "3. Filter Products by Price Range\n";
         cout << "4. Sort Inventory\n";
         cout << "5. Shopping Cart (Doubly Linked List)\n";
+        cout << "6. Partner Brand Showcase (Circular Linked List)\n";
         cout << "0. Exit\n";
 
         cout << "============================================\n";
@@ -433,6 +479,14 @@ int main() {
             case 5: {
 
                 shoppingCartMenu(cart, products);
+
+                break;
+            }
+
+            // Circular linked list brand showcase (Lab 3).
+            case 6: {
+
+                brandShowcaseMenu(showcase);
 
                 break;
             }
