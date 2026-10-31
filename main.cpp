@@ -13,6 +13,14 @@
 #include <limits>
 #include <cmath>
 #include <new>
+#include <windows.h>
+
+HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+
+void setColor(int color) {
+    SetConsoleTextAttribute(console, color);
+}
+
 
 using namespace std;
 
@@ -54,18 +62,34 @@ void displayProducts(const vector<Item>& products) {
 
     cout << string(95, '-') << "\n";
 
-    for (const Item& product : products) {
+  for (const Item& product : products) {
 
-        cout << left
-             << setw(5) << product.getId()
-             << setw(30) << product.getName().substr(0, 28)
-             << setw(25) << product.getBrand().substr(0, 23)
-             << setw(15) << product.getCategory().substr(0, 13)
-             << setw(12) << fixed << setprecision(2)
-             << product.getPrice()
-             << product.getStock()
-             << "\n";
+    cout << left
+         << setw(5) << product.getId()
+         << setw(30) << product.getName().substr(0, 28)
+         << setw(25) << product.getBrand().substr(0, 23)
+         << setw(15) << product.getCategory().substr(0, 13)
+         << setw(12) << fixed << setprecision(2)
+         << product.getPrice();
+
+    int stock = product.getStock();
+
+    if (stock <= 5) {
+        setColor(12); // Red
     }
+    else if (stock <= 10) {
+        setColor(14); // Yellow
+    }
+    else {
+        setColor(10); // Green
+    }
+
+    cout << stock;
+
+    setColor(7); // Reset to white
+
+    cout << "\n";
+}
 
     cout << "\nTotal Products: " << products.size() << "\n";
 }
@@ -492,11 +516,13 @@ int main() {
     int choice = -1;
 
     do {
-
+        
+        setColor(11);
         cout << "\n============================================\n";
         cout << "             BEAUTRIX SYSTEM\n";
         cout << "============================================\n";
-
+        
+        setColor(7);
         cout << "1. View Complete Catalog\n";
         cout << "2. Search Products by Keyword\n";
         cout << "3. Filter Products by Price Range\n";

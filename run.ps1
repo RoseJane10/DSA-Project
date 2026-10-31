@@ -45,11 +45,4 @@ if (-not (Test-Path ".\build\beautrix.exe")) {
     exit 1
 }
 
-# 6. Launch application
-Write-Host ""
-Write-Host "============================================" -ForegroundColor Cyan
-Write-Host "           BEAUTRIX SYSTEM" -ForegroundColor Cyan
-Write-Host "============================================" -ForegroundColor Cyan
-Write-Host ""
-
 & ".\build\beautrix.exe"
