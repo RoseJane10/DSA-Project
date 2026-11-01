@@ -7,6 +7,8 @@
 #include "InventoryUndoStack.h"
 #include "AuthSystem.h"
 #include "OrderQueue.h"
+#include "ProductBST.h"
+#include "DynamicProductCatalog.h"
 
 #include <iostream>
 #include <iomanip>
@@ -16,7 +18,6 @@
 #include <cmath>
 #include <new>
 #include <windows.h>
-#include "ProductBST.h"
 
 using namespace std;
 
@@ -29,21 +30,16 @@ void setColor(int color) {
 
 // Read an integer safely.
 bool readInteger(const string& prompt, int& value) {
-
     cout << prompt;
 
     if (!(cin >> value)) {
-
         cout << "\nInvalid input. Please enter a valid number.\n";
-
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
         return false;
     }
 
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
     return true;
 }
 
@@ -79,23 +75,39 @@ void displayProducts(const vector<Item>& products) {
         int stock = product.getStock();
 
         if (stock <= 5) {
-            setColor(12); // Red: Low stock
+            setColor(12);
         }
         else if (stock <= 10) {
-            setColor(14); // Yellow: Medium stock
+            setColor(14);
         }
         else {
-            setColor(10); // Green: Sufficient stock
+            setColor(10);
         }
 
         cout << stock;
-
         setColor(7);
-
         cout << "\n";
     }
 
     cout << "\nTotal Products: " << products.size() << "\n";
+}
+
+// ======================================================
+// LAB 1: DYNAMIC PRODUCT CATALOG
+// ======================================================
+
+void displayDynamicCatalog(const DynamicProductCatalog& catalog) {
+
+    cout << "\n========== DYNAMIC PRODUCT CATALOG ==========\n";
+
+    cout << "Products Stored: " << catalog.getSize() << "\n";
+    cout << "Allocated Capacity: " << catalog.getCapacity() << "\n";
+
+    cout << "=============================================\n";
+
+    vector<Item> products = catalog.toVector();
+
+    displayProducts(products);
 }
 
 // ======================================================
@@ -114,12 +126,9 @@ void productBSTSearchMenu(
 
     try {
 
-        // Rebuild index using the latest inventory.
         if (!productIndex.build(products)) {
-
             cout << "\nUnable to build the product BST.\n";
             cout << "Duplicate or invalid product IDs detected.\n";
-
             return;
         }
 
@@ -135,25 +144,22 @@ void productBSTSearchMenu(
         const Item* result = productIndex.search(productId);
 
         if (result == nullptr) {
-
             cout << "\nProduct ID not found.\n";
-
             return;
         }
 
-        cout << "\n<escape>========== PRODUCT FOUND ==========</escape>\n";
+        cout << "\n========== PRODUCT FOUND ==========\n";
 
         vector<Item> foundProduct;
         foundProduct.push_back(*result);
 
         displayProducts(foundProduct);
-
     }
     catch (const bad_alloc&) {
-
         cout << "\nNot enough memory to build or search the BST.\n";
     }
 }
+
 // ======================================================
 // SHOPPING CART MENU
 // Lab 2: Doubly Linked List
@@ -192,7 +198,6 @@ void shoppingCartMenu(
 
         switch (choice) {
 
-            // Add item.
             case 1: {
 
                 int productId;
@@ -207,7 +212,6 @@ void shoppingCartMenu(
                 const Item* selectedItem = nullptr;
 
                 for (const Item& product : products) {
-
                     if (product.getId() == productId) {
                         selectedItem = &product;
                         break;
@@ -234,40 +238,28 @@ void shoppingCartMenu(
                 }
 
                 cart.addItem(*selectedItem, quantity);
-
                 break;
             }
 
-            // View cart.
-            case 2: {
-
+            case 2:
                 cout << "\n========== VIEW SHOPPING CART ==========\n";
-
                 cart.displayCart();
-
                 break;
-            }
 
-            // Remove item.
             case 3: {
 
                 int productId;
 
                 cout << "\n========== REMOVE CART ITEM ==========\n";
 
-                if (!readInteger(
-                    "Enter Product ID to remove: ",
-                    productId
-                )) {
+                if (!readInteger("Enter Product ID to remove: ", productId)) {
                     break;
                 }
 
                 cart.removeItem(productId);
-
                 break;
             }
 
-            // Update quantity.
             case 4: {
 
                 int productId;
@@ -284,45 +276,29 @@ void shoppingCartMenu(
                 }
 
                 cart.updateQuantity(productId, quantity);
-
                 break;
             }
 
-            // Navigate forward.
-            case 5: {
-
+            case 5:
                 cout << "\n========== FORWARD NAVIGATION ==========\n";
-
                 cart.displayForward();
-
                 break;
-            }
 
-            // Navigate backward.
-            case 6: {
-
+            case 6:
                 cout << "\n========== BACKWARD NAVIGATION ==========\n";
-
                 cart.displayBackward();
-
                 break;
-            }
 
-            // Display total.
-            case 7: {
+            case 7:
 
                 cout << "\n========== CART TOTAL ==========\n";
-
                 cout << "Total Products: " << cart.getSize() << "\n";
 
                 cout << "Grand Total: P"
                      << fixed << setprecision(2)
                      << cart.calculateTotal() << "\n";
-
                 break;
-            }
 
-            // Submit cart to FIFO queue.
             case 8: {
 
                 cout << "\n========== SUBMIT ORDER ==========\n";
@@ -342,7 +318,6 @@ void shoppingCartMenu(
 
                 try {
 
-                    // Retrieve independent copies of cart items.
                     vector<CartItem> cartItems = cart.getItems();
 
                     if (cartItems.empty()) {
@@ -350,8 +325,9 @@ void shoppingCartMenu(
                         break;
                     }
 
-                    // Prepare the customer order.
                     order.items.reserve(cartItems.size());
+
+                    bool validOrder = true;
 
                     for (const CartItem& item : cartItems) {
 
@@ -361,6 +337,7 @@ void shoppingCartMenu(
                             cout << "\nInvalid cart item. "
                                  << "Order was not submitted.\n";
 
+                            validOrder = false;
                             break;
                         }
 
@@ -370,14 +347,12 @@ void shoppingCartMenu(
                         });
                     }
 
-                    if (order.items.size() != cartItems.size()) {
+                    if (!validOrder) {
                         break;
                     }
 
-                    // Add order to the queue.
                     orderQueue.enqueue(order);
 
-                    // Clear cart after successful enqueue.
                     cart.clearCart();
 
                     cout << "\nYour order has been submitted!\n";
@@ -386,10 +361,8 @@ void shoppingCartMenu(
                          << orderQueue.getSize() << "\n";
 
                     cout << "Your order is waiting for checkout processing.\n";
-
                 }
                 catch (const bad_alloc&) {
-
                     cout << "\nNot enough memory to submit your order.\n";
                     cout << "Your shopping cart has been preserved.\n";
                 }
@@ -398,13 +371,10 @@ void shoppingCartMenu(
             }
 
             case 0:
-
                 cout << "\nReturning to BEAUTRIX main menu...\n";
-
                 break;
 
             default:
-
                 cout << "\nInvalid choice. Please try again.\n";
         }
 
@@ -444,52 +414,36 @@ void checkoutQueueMenu(
 
         switch (choice) {
 
-            // View pending orders.
-            case 1: {
-
+            case 1:
                 orderQueue.displayQueue();
-
                 break;
-            }
 
-            // Process the first order.
             case 2: {
 
                 cout << "\n========== PROCESS NEXT ORDER ==========\n";
 
                 if (!canProcess) {
-
                     cout << "\nAccess denied. "
                          << "Admin or staff account required.\n";
-
                     break;
                 }
 
                 CustomerOrder nextOrder;
 
-                // Read the front order without removing it.
                 try {
 
                     if (!orderQueue.peek(nextOrder)) {
-
                         cout << "\nNo pending orders to process.\n";
-
                         break;
                     }
-
                 }
                 catch (const bad_alloc&) {
-
                     cout << "\nNot enough memory to retrieve the order.\n";
-
                     break;
                 }
 
-                cout << "\nCustomer: "
-                     << nextOrder.username << "\n";
-
-                cout << "Products: "
-                     << nextOrder.items.size() << "\n";
+                cout << "\nCustomer: " << nextOrder.username << "\n";
+                cout << "Products: " << nextOrder.items.size() << "\n";
 
                 int confirm;
 
@@ -501,16 +455,13 @@ void checkoutQueueMenu(
                 }
 
                 if (confirm != 1) {
-
                     cout << "\nOrder processing cancelled.\n";
-
                     break;
                 }
 
                 int orderId = 0;
                 double orderTotal = 0.0;
 
-                // Save order and deduct stock through PostgreSQL.
                 if (!repository.processOrder(
                     nextOrder,
                     orderId,
@@ -519,16 +470,12 @@ void checkoutQueueMenu(
 
                     cout << "\nOrder was not completed.\n";
                     cout << "It remains in the checkout queue.\n";
-
                     break;
                 }
 
-                // Remove order only after successful database commit.
                 if (!orderQueue.removeFront()) {
-
                     cout << "\nWarning: The database order was saved, "
                          << "but the queue could not remove its front item.\n";
-
                     break;
                 }
 
@@ -548,17 +495,13 @@ void checkoutQueueMenu(
 
                 cout << "============================================\n";
 
-                // Refresh inventory after successful checkout.
                 vector<Item> refreshedProducts =
                     repository.getAllProducts();
 
                 if (!refreshedProducts.empty()) {
-
                     products.swap(refreshedProducts);
-
                 }
                 else {
-
                     cout << "\nWarning: Inventory could not be refreshed.\n";
                 }
 
@@ -566,13 +509,10 @@ void checkoutQueueMenu(
             }
 
             case 0:
-
                 cout << "\nReturning to BEAUTRIX main menu...\n";
-
                 break;
 
             default:
-
                 cout << "\nInvalid choice. Please try again.\n";
         }
 
@@ -607,25 +547,18 @@ void brandShowcaseMenu(BrandShowcase& showcase) {
         switch (choice) {
 
             case 1:
-
                 showcase.displayAll();
-
                 break;
 
             case 2:
-
                 showcase.displayNext();
-
                 break;
 
             case 0:
-
                 cout << "\nReturning to BEAUTRIX main menu...\n";
-
                 break;
 
             default:
-
                 cout << "\nInvalid choice. Please try again.\n";
         }
 
@@ -667,15 +600,10 @@ void inventoryUndoMenu(
 
         switch (choice) {
 
-            // View inventory.
-            case 1: {
-
+            case 1:
                 displayProducts(products);
-
                 break;
-            }
 
-            // Update stock.
             case 2: {
 
                 int productId;
@@ -690,29 +618,21 @@ void inventoryUndoMenu(
                 Item* selectedProduct = nullptr;
 
                 for (Item& product : products) {
-
                     if (product.getId() == productId) {
-
                         selectedProduct = &product;
-
                         break;
                     }
                 }
 
                 if (selectedProduct == nullptr) {
-
                     cout << "\nProduct ID not found.\n";
-
                     break;
                 }
 
                 const int previousStock = selectedProduct->getStock();
 
-                cout << "\nProduct: "
-                     << selectedProduct->getName() << "\n";
-
-                cout << "Current Stock: "
-                     << previousStock << "\n";
+                cout << "\nProduct: " << selectedProduct->getName() << "\n";
+                cout << "Current Stock: " << previousStock << "\n";
 
                 if (!readInteger(
                     "Enter new stock quantity: ",
@@ -722,16 +642,12 @@ void inventoryUndoMenu(
                 }
 
                 if (newStock < 0) {
-
                     cout << "\nStock cannot be negative.\n";
-
                     break;
                 }
 
                 if (newStock == previousStock) {
-
                     cout << "\nThe new stock is the same as the current stock.\n";
-
                     break;
                 }
 
@@ -742,17 +658,12 @@ void inventoryUndoMenu(
                     newStock
                 };
 
-                // Save undo action before changing the database.
                 try {
-
                     undoStack.push(action);
-
                 }
                 catch (const bad_alloc&) {
-
                     cout << "\nNot enough memory to save the undo action. "
                          << "Stock was not changed.\n";
-
                     break;
                 }
 
@@ -763,11 +674,9 @@ void inventoryUndoMenu(
                 )) {
 
                     InventoryUndoStack::UndoAction discarded;
-
                     undoStack.pop(discarded);
 
                     cout << "\nStock was not changed.\n";
-
                     break;
                 }
 
@@ -777,12 +686,9 @@ void inventoryUndoMenu(
                     repository.getAllProducts();
 
                 if (!refreshedProducts.empty()) {
-
                     products.swap(refreshedProducts);
-
                 }
                 else {
-
                     cout << "Warning: Stock was updated, but the catalog "
                          << "could not be refreshed.\n";
                 }
@@ -790,7 +696,6 @@ void inventoryUndoMenu(
                 break;
             }
 
-            // Undo last stock change.
             case 3: {
 
                 InventoryUndoStack::UndoAction action;
@@ -798,9 +703,7 @@ void inventoryUndoMenu(
                 cout << "\n========== UNDO LAST STOCK CHANGE ==========\n";
 
                 if (!undoStack.peek(action)) {
-
                     cout << "\nNothing to undo. The undo stack is empty.\n";
-
                     break;
                 }
 
@@ -818,9 +721,7 @@ void inventoryUndoMenu(
                 }
 
                 if (confirm != 1) {
-
                     cout << "\nUndo cancelled.\n";
-
                     break;
                 }
 
@@ -832,12 +733,10 @@ void inventoryUndoMenu(
 
                     cout << "\nUndo failed. The stack entry was kept. "
                          << "The product stock may have changed elsewhere.\n";
-
                     break;
                 }
 
                 InventoryUndoStack::UndoAction removedAction;
-
                 undoStack.pop(removedAction);
 
                 cout << "\nUndo successful. Previous stock restored.\n";
@@ -846,12 +745,9 @@ void inventoryUndoMenu(
                     repository.getAllProducts();
 
                 if (!refreshedProducts.empty()) {
-
                     products.swap(refreshedProducts);
-
                 }
                 else {
-
                     cout << "Warning: Stock was restored, but the catalog "
                          << "could not be refreshed.\n";
                 }
@@ -860,28 +756,20 @@ void inventoryUndoMenu(
             }
 
             case 4:
-
                 undoStack.displayLatest();
-
                 break;
 
             case 5:
-
                 cout << "\nUndo actions available: "
                      << undoStack.getSize() << "\n";
-
                 break;
 
             case 0:
-
                 cout << "\nReturning to BEAUTRIX main menu...\n";
-
                 break;
 
             default:
-
                 cout << "\nInvalid choice. Please try again.\n";
-
                 break;
         }
 
@@ -901,7 +789,7 @@ int main() {
         return 1;
     }
 
-    // Authenticate user before opening the system.
+    // Authenticate user.
     AuthSystem authSystem(database);
 
     AuthenticatedUser currentUser{0, "", ""};
@@ -911,24 +799,19 @@ int main() {
     for (int attempt = 1; attempt <= 3; attempt++) {
 
         if (authSystem.login(currentUser)) {
-
             authenticated = true;
-
             break;
         }
 
         if (attempt < 3) {
-
             cout << "\nLogin attempts remaining: "
                  << (3 - attempt) << "\n";
         }
     }
 
     if (!authenticated) {
-
         cout << "\nMaximum login attempts reached.\n";
         cout << "Exiting BEAUTRIX...\n";
-
         return 0;
     }
 
@@ -939,9 +822,25 @@ int main() {
     vector<Item> products = repository.getAllProducts();
 
     if (products.empty()) {
-
         cout << "No products available or failed to retrieve inventory.\n";
+        return 1;
+    }
 
+    // Lab 1: Dynamic Product Catalog.
+    DynamicProductCatalog dynamicCatalog;
+
+    try {
+
+        dynamicCatalog.load(products);
+
+        cout << "\nDynamic Product Catalog initialized successfully.\n";
+        cout << "Products loaded: " << dynamicCatalog.getSize() << "\n";
+        cout << "Allocated capacity: "
+             << dynamicCatalog.getCapacity() << "\n";
+    }
+    catch (const bad_alloc&) {
+
+        cout << "\nUnable to allocate memory for the product catalog.\n";
         return 1;
     }
 
@@ -956,12 +855,11 @@ int main() {
 
     // Lab 3: Circular linked list brand showcase.
     BrandShowcase showcase;
-    
-    //Lab 6
+
+    // Lab 6: Binary search tree.
     ProductBST productIndex;
 
     for (const Item& product : products) {
-
         showcase.addBrand(product.getBrand());
     }
 
@@ -992,7 +890,6 @@ int main() {
 
         if (currentUser.role == "admin" ||
             currentUser.role == "staff") {
-
             cout << "8. Stock Management & Undo\n";
         }
 
@@ -1007,12 +904,12 @@ int main() {
 
         switch (choice) {
 
-            // Complete catalog.
+            // Lab 1: Display dynamic product catalog.
             case 1: {
 
                 cout << "\n========== COMPLETE PRODUCT CATALOG ==========\n";
 
-                displayProducts(products);
+                displayDynamicCatalog(dynamicCatalog);
 
                 break;
             }
@@ -1023,7 +920,6 @@ int main() {
                 string keyword;
 
                 cout << "\n========== LINEAR SEARCH ==========\n";
-
                 cout << "Enter product name or brand: ";
 
                 getline(cin, keyword);
@@ -1032,7 +928,6 @@ int main() {
                     string::npos) {
 
                     cout << "\nSearch keyword cannot be empty.\n";
-
                     break;
                 }
 
@@ -1040,7 +935,6 @@ int main() {
                     linearSearchProducts(products, keyword);
 
                 cout << "\n========== SEARCH RESULTS ==========\n";
-
                 displayProducts(results);
 
                 break;
@@ -1057,24 +951,18 @@ int main() {
                 cout << "Enter minimum price: ";
 
                 if (!(cin >> minPrice)) {
-
                     cout << "\nInvalid input. Please enter a valid number.\n";
-
                     cin.clear();
                     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
                     break;
                 }
 
                 cout << "Enter maximum price: ";
 
                 if (!(cin >> maxPrice)) {
-
                     cout << "\nInvalid input. Please enter a valid number.\n";
-
                     cin.clear();
                     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
                     break;
                 }
 
@@ -1086,14 +974,11 @@ int main() {
                     maxPrice < 0) {
 
                     cout << "\nPrices cannot be negative or infinite.\n";
-
                     break;
                 }
 
                 if (minPrice > maxPrice) {
-
                     cout << "\nMinimum price cannot be greater than maximum price.\n";
-
                     break;
                 }
 
@@ -1135,50 +1020,29 @@ int main() {
 
                 switch (sortChoice) {
 
-                    case 1: {
-
-                        sortedProducts =
-                            insertionSortByBrand(products);
-
+                    case 1:
+                        sortedProducts = insertionSortByBrand(products);
                         cout << "\n========== SORTED BY BRAND ==========\n";
-
                         displayProducts(sortedProducts);
-
                         break;
-                    }
 
-                    case 2: {
-
-                        sortedProducts =
-                            quickSortByPrice(products);
-
+                    case 2:
+                        sortedProducts = quickSortByPrice(products);
                         cout << "\n========== SORTED BY PRICE ==========\n";
-
                         displayProducts(sortedProducts);
-
                         break;
-                    }
 
-                    case 3: {
-
-                        sortedProducts =
-                            quickSortByStock(products);
-
+                    case 3:
+                        sortedProducts = quickSortByStock(products);
                         cout << "\n========== SORTED BY STOCK ==========\n";
-
                         displayProducts(sortedProducts);
-
                         break;
-                    }
 
                     case 0:
-
                         cout << "\nReturning to main menu...\n";
-
                         break;
 
                     default:
-
                         cout << "\nInvalid sorting option.\n";
                 }
 
@@ -1202,7 +1066,6 @@ int main() {
             case 6: {
 
                 brandShowcaseMenu(showcase);
-
                 break;
             }
 
@@ -1219,6 +1082,15 @@ int main() {
                     products,
                     canProcess
                 );
+
+                // Synchronize dynamic catalog after checkout.
+                try {
+                    dynamicCatalog.load(products);
+                }
+                catch (const bad_alloc&) {
+                    cout << "\nWarning: Unable to synchronize "
+                         << "the dynamic product catalog.\n";
+                }
 
                 break;
             }
@@ -1241,27 +1113,34 @@ int main() {
                     undoStack
                 );
 
+                // Synchronize dynamic catalog after stock changes.
+                try {
+                    dynamicCatalog.load(products);
+                }
+                catch (const bad_alloc&) {
+                    cout << "\nWarning: Unable to synchronize "
+                         << "the dynamic product catalog.\n";
+                }
+
                 break;
             }
 
+            // Lab 6: BST product ID search.
             case 9: {
 
-    productBSTSearchMenu(productIndex, products);
-
-    break;
-}
+                productBSTSearchMenu(productIndex, products);
+                break;
+            }
 
             case 0: {
 
                 cout << "\nThank you for using BEAUTRIX!\n";
-
                 break;
             }
 
             default: {
 
                 cout << "\nInvalid choice. Please try again.\n";
-
                 break;
             }
         }

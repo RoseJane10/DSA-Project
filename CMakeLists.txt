@@ -32,6 +32,7 @@ add_executable(beautrix
     src/AuthSystem.cpp
     src/OrderQueue.cpp
     src/ProductBST.cpp
+    src/DynamicProductCatalog.cpp
 )
 
 # Include directories
