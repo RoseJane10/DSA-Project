@@ -16,6 +16,7 @@
 #include <cmath>
 #include <new>
 #include <windows.h>
+#include "ProductBST.h"
 
 using namespace std;
 
@@ -97,6 +98,62 @@ void displayProducts(const vector<Item>& products) {
     cout << "\nTotal Products: " << products.size() << "\n";
 }
 
+// ======================================================
+// PRODUCT ID SEARCH
+// Lab 6: Binary Search Tree
+// ======================================================
+
+void productBSTSearchMenu(
+    ProductBST& productIndex,
+    const vector<Item>& products
+) {
+
+    cout << "\n============================================\n";
+    cout << "       PRODUCT ID SEARCH (BST)\n";
+    cout << "============================================\n";
+
+    try {
+
+        // Rebuild index using the latest inventory.
+        if (!productIndex.build(products)) {
+
+            cout << "\nUnable to build the product BST.\n";
+            cout << "Duplicate or invalid product IDs detected.\n";
+
+            return;
+        }
+
+        cout << "Products indexed: "
+             << productIndex.getSize() << "\n";
+
+        int productId;
+
+        if (!readInteger("Enter Product ID to search: ", productId)) {
+            return;
+        }
+
+        const Item* result = productIndex.search(productId);
+
+        if (result == nullptr) {
+
+            cout << "\nProduct ID not found.\n";
+
+            return;
+        }
+
+        cout << "\n<escape>========== PRODUCT FOUND ==========</escape>\n";
+
+        vector<Item> foundProduct;
+        foundProduct.push_back(*result);
+
+        displayProducts(foundProduct);
+
+    }
+    catch (const bad_alloc&) {
+
+        cout << "\nNot enough memory to build or search the BST.\n";
+    }
+}
 // ======================================================
 // SHOPPING CART MENU
 // Lab 2: Doubly Linked List
@@ -899,6 +956,9 @@ int main() {
 
     // Lab 3: Circular linked list brand showcase.
     BrandShowcase showcase;
+    
+    //Lab 6
+    ProductBST productIndex;
 
     for (const Item& product : products) {
 
@@ -926,16 +986,17 @@ int main() {
         cout << "2. Search Products by Keyword\n";
         cout << "3. Filter Products by Price Range\n";
         cout << "4. Sort Inventory\n";
-        cout << "5. Shopping Cart (Doubly Linked List)\n";
-        cout << "6. Partner Brand Showcase (Circular Linked List)\n";
-        cout << "7. Checkout Order Queue (FIFO)\n";
+        cout << "5. Shopping Cart\n";
+        cout << "6. Partner Brand Showcase\n";
+        cout << "7. Checkout Order Queue\n";
 
         if (currentUser.role == "admin" ||
             currentUser.role == "staff") {
 
-            cout << "8. Stock Management & Undo (Stack LIFO)\n";
+            cout << "8. Stock Management & Undo\n";
         }
 
+        cout << "9. Search Product by ID\n";
         cout << "0. Exit\n";
 
         cout << "============================================\n";
@@ -1182,6 +1243,13 @@ int main() {
 
                 break;
             }
+
+            case 9: {
+
+    productBSTSearchMenu(productIndex, products);
+
+    break;
+}
 
             case 0: {
 
