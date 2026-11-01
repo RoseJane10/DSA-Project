@@ -18,6 +18,8 @@
 #include <cmath>
 #include <new>
 #include <cstdlib>
+#include <algorithm>
+#include <cctype>
 #include <windows.h>
 
 using namespace std;
@@ -28,17 +30,14 @@ HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 // CONSOLE DESIGN AND DISPLAY FUNCTIONS
 // ======================================================
 
-// Change console text color.
 void setColor(int color) {
     SetConsoleTextAttribute(console, color);
 }
 
-// Clear console screen.
 void clearScreen() {
     system("cls");
 }
 
-// Print text in the center of the console.
 void printCentered(const string& text, int color = 7) {
 
     CONSOLE_SCREEN_BUFFER_INFO info;
@@ -61,7 +60,6 @@ void printCentered(const string& text, int color = 7) {
     setColor(7);
 }
 
-// Print menu options with aligned numbers.
 void printMenuOption(
     int number,
     const string& option,
@@ -96,7 +94,6 @@ void printMenuOption(
     cout << left << option << '\n';
 }
 
-// Display a consistent BEAUTRIX heading.
 void displayHeader(
     const string& title,
     const string& subtitle = ""
@@ -105,11 +102,7 @@ void displayHeader(
     cout << '\n';
 
     printCentered("BEAUTRIX", 13);
-
-    printCentered(
-        "BEAUTY COSMETICS INVENTORY SYSTEM",
-        11
-    );
+    printCentered("BEAUTY COSMETICS INVENTORY SYSTEM", 11);
 
     cout << '\n';
 
@@ -122,14 +115,12 @@ void displayHeader(
     cout << '\n';
 }
 
-// Pause before clearing the current screen.
 void pauseForUser() {
     cout << '\n';
     printCentered("Press ENTER to continue...", 8);
     cin.get();
 }
 
-// Read an integer safely.
 bool readInteger(const string& prompt, int& value) {
 
     cout << prompt;
@@ -157,6 +148,74 @@ bool readInteger(const string& prompt, int& value) {
 }
 
 // ======================================================
+// OFFICIAL BRAND FILTER HELPERS
+// ======================================================
+
+// Convert text to lowercase for case-insensitive comparison.
+string normalizeBrandName(const string& text) {
+
+    string result = text;
+
+    transform(
+        result.begin(),
+        result.end(),
+        result.begin(),
+        [](unsigned char character) {
+            return static_cast<char>(tolower(character));
+        }
+    );
+
+    return result;
+}
+
+// Display unique brands available in the inventory.
+void displayAvailableBrands(const vector<Item>& products) {
+
+    vector<string> brands;
+
+    for (const Item& product : products) {
+
+        string brand = product.getBrand();
+
+        bool alreadyExists = false;
+
+        for (const string& existingBrand : brands) {
+
+            if (normalizeBrandName(existingBrand) ==
+                normalizeBrandName(brand)) {
+
+                alreadyExists = true;
+                break;
+            }
+        }
+
+        if (!alreadyExists) {
+            brands.push_back(brand);
+        }
+    }
+
+    sort(
+        brands.begin(),
+        brands.end(),
+        [](const string& a, const string& b) {
+            return normalizeBrandName(a) <
+                   normalizeBrandName(b);
+        }
+    );
+
+    cout << "\nAVAILABLE OFFICIAL BRANDS\n\n";
+
+    for (size_t i = 0; i < brands.size(); i++) {
+
+        cout << setw(3) << (i + 1)
+             << ". " << brands[i] << '\n';
+    }
+
+    cout << "\nTotal Available Brands: "
+         << brands.size() << '\n';
+}
+
+// ======================================================
 // PRODUCT DISPLAY
 // ======================================================
 
@@ -180,9 +239,7 @@ void displayProducts(const vector<Item>& products) {
          << "STOCK\n";
 
     setColor(8);
-
     cout << string(95, '-') << "\n";
-
     setColor(7);
 
     for (const Item& product : products) {
@@ -343,7 +400,6 @@ void shoppingCartMenu(
 
         cout << '\n';
         printMenuOption(0, "Back to Main Menu", 12);
-
         cout << '\n';
 
         if (!readInteger("Enter your choice: ", choice)) {
@@ -359,10 +415,7 @@ void shoppingCartMenu(
 
                 cout << "\nADD ITEM TO CART\n\n";
 
-                if (!readInteger(
-                    "Enter Product ID: ",
-                    productId
-                )) {
+                if (!readInteger("Enter Product ID: ", productId)) {
                     break;
                 }
 
@@ -394,10 +447,7 @@ void shoppingCartMenu(
                 cout << "Available Stock: "
                      << selectedItem->getStock() << '\n';
 
-                if (!readInteger(
-                    "Enter quantity: ",
-                    quantity
-                )) {
+                if (!readInteger("Enter quantity: ", quantity)) {
                     break;
                 }
 
@@ -438,17 +488,11 @@ void shoppingCartMenu(
 
                 cout << "\nUPDATE CART QUANTITY\n\n";
 
-                if (!readInteger(
-                    "Enter Product ID: ",
-                    productId
-                )) {
+                if (!readInteger("Enter Product ID: ", productId)) {
                     break;
                 }
 
-                if (!readInteger(
-                    "Enter new quantity: ",
-                    quantity
-                )) {
+                if (!readInteger("Enter new quantity: ", quantity)) {
                     break;
                 }
 
@@ -503,8 +547,7 @@ void shoppingCartMenu(
 
                 try {
 
-                    vector<CartItem> cartItems =
-                        cart.getItems();
+                    vector<CartItem> cartItems = cart.getItems();
 
                     if (cartItems.empty()) {
                         cout << "Your shopping cart is empty.\n";
@@ -538,7 +581,6 @@ void shoppingCartMenu(
                     }
 
                     orderQueue.enqueue(order);
-
                     cart.clearCart();
 
                     setColor(10);
@@ -600,7 +642,6 @@ void checkoutQueueMenu(
 
         cout << '\n';
         printMenuOption(0, "Back to Main Menu", 12);
-
         cout << '\n';
 
         if (!readInteger("Enter your choice: ", choice)) {
@@ -633,7 +674,6 @@ void checkoutQueueMenu(
                 try {
 
                     if (!orderQueue.peek(nextOrder)) {
-
                         cout << "No pending orders to process.\n";
                         break;
                     }
@@ -660,7 +700,6 @@ void checkoutQueueMenu(
                 }
 
                 if (confirm != 1) {
-
                     cout << "\nOrder processing cancelled.\n";
                     break;
                 }
@@ -676,7 +715,6 @@ void checkoutQueueMenu(
 
                     cout << "\nOrder was not completed.\n";
                     cout << "It remains in the checkout queue.\n";
-
                     break;
                 }
 
@@ -692,11 +730,8 @@ void checkoutQueueMenu(
                 cout << "\nORDER COMPLETED\n";
                 setColor(7);
 
-                cout << "Order ID: "
-                     << orderId << '\n';
-
-                cout << "Customer: "
-                     << nextOrder.username << '\n';
+                cout << "Order ID: " << orderId << '\n';
+                cout << "Customer: " << nextOrder.username << '\n';
 
                 cout << "Total Amount: P"
                      << fixed << setprecision(2)
@@ -754,7 +789,6 @@ void brandShowcaseMenu(BrandShowcase& showcase) {
 
         cout << '\n';
         printMenuOption(0, "Back to Main Menu", 12);
-
         cout << '\n';
 
         if (!readInteger("Enter your choice: ", choice)) {
@@ -764,15 +798,11 @@ void brandShowcaseMenu(BrandShowcase& showcase) {
         switch (choice) {
 
             case 1:
-
                 showcase.displayAll();
-
                 break;
 
             case 2:
-
                 showcase.displayNext();
-
                 break;
 
             case 0:
@@ -818,7 +848,6 @@ void inventoryUndoMenu(
 
         cout << '\n';
         printMenuOption(0, "Back to Main Menu", 12);
-
         cout << '\n';
 
         if (!readInteger("Enter your choice: ", choice)) {
@@ -840,10 +869,7 @@ void inventoryUndoMenu(
 
                 cout << "\nUPDATE PRODUCT STOCK\n\n";
 
-                if (!readInteger(
-                    "Enter Product ID: ",
-                    productId
-                )) {
+                if (!readInteger("Enter Product ID: ", productId)) {
                     break;
                 }
 
@@ -858,13 +884,11 @@ void inventoryUndoMenu(
                 }
 
                 if (selectedProduct == nullptr) {
-
                     cout << "\nProduct ID not found.\n";
                     break;
                 }
 
-                const int previousStock =
-                    selectedProduct->getStock();
+                const int previousStock = selectedProduct->getStock();
 
                 cout << "\nProduct: "
                      << selectedProduct->getName() << '\n';
@@ -880,16 +904,13 @@ void inventoryUndoMenu(
                 }
 
                 if (newStock < 0) {
-
                     cout << "\nStock cannot be negative.\n";
                     break;
                 }
 
                 if (newStock == previousStock) {
-
                     cout << "\nThe new stock is the same as "
                          << "the current stock.\n";
-
                     break;
                 }
 
@@ -949,19 +970,13 @@ void inventoryUndoMenu(
                 cout << "\nUNDO LAST STOCK CHANGE\n\n";
 
                 if (!undoStack.peek(action)) {
-
                     cout << "Nothing to undo. The undo stack is empty.\n";
                     break;
                 }
 
-                cout << "Product: "
-                     << action.productName << '\n';
-
-                cout << "Previous Stock: "
-                     << action.previousStock << '\n';
-
-                cout << "Updated Stock: "
-                     << action.updatedStock << '\n';
+                cout << "Product: " << action.productName << '\n';
+                cout << "Previous Stock: " << action.previousStock << '\n';
+                cout << "Updated Stock: " << action.updatedStock << '\n';
 
                 int confirm;
 
@@ -973,7 +988,6 @@ void inventoryUndoMenu(
                 }
 
                 if (confirm != 1) {
-
                     cout << "\nUndo cancelled.\n";
                     break;
                 }
@@ -1012,9 +1026,7 @@ void inventoryUndoMenu(
             }
 
             case 4:
-
                 undoStack.displayLatest();
-
                 break;
 
             case 5:
@@ -1028,9 +1040,7 @@ void inventoryUndoMenu(
                 break;
 
             default:
-
                 cout << "\nInvalid choice. Please try again.\n";
-
                 break;
         }
 
@@ -1069,7 +1079,6 @@ int main() {
         }
 
         if (attempt < 3) {
-
             cout << "\nLogin attempts remaining: "
                  << (3 - attempt) << '\n';
         }
@@ -1087,8 +1096,7 @@ int main() {
     InventoryRepository repository(database);
 
     // Retrieve products from PostgreSQL.
-    vector<Item> products =
-        repository.getAllProducts();
+    vector<Item> products = repository.getAllProducts();
 
     if (products.empty()) {
 
@@ -1100,9 +1108,7 @@ int main() {
     DynamicProductCatalog dynamicCatalog;
 
     try {
-
         dynamicCatalog.load(products);
-
     }
     catch (const bad_alloc&) {
 
@@ -1145,7 +1151,6 @@ int main() {
 
         cout << '\n';
 
-        // Main menu with aligned numbers.
         printMenuOption(1, "View Complete Catalog");
         printMenuOption(2, "Search Products by Keyword");
         printMenuOption(3, "Filter Products by Price Range");
@@ -1161,11 +1166,10 @@ int main() {
         }
 
         printMenuOption(9, "Search Product by ID");
+        printMenuOption(10, "Filter Products by Official Brand");
 
         cout << '\n';
-
         printMenuOption(0, "Exit BEAUTRIX", 12);
-
         cout << '\n';
 
         if (!readInteger("Enter your choice: ", choice)) {
@@ -1178,7 +1182,6 @@ int main() {
             case 1: {
 
                 clearScreen();
-
                 displayDynamicCatalog(dynamicCatalog);
 
                 break;
@@ -1197,7 +1200,6 @@ int main() {
                 string keyword;
 
                 cout << "Enter product name or brand: ";
-
                 getline(cin, keyword);
 
                 if (keyword.find_first_not_of(" \t\n\r") ==
@@ -1211,7 +1213,6 @@ int main() {
                     linearSearchProducts(products, keyword);
 
                 cout << "\nSEARCH RESULTS\n";
-
                 displayProducts(results);
 
                 break;
@@ -1237,7 +1238,6 @@ int main() {
                     cout << "\nInvalid input. Please enter a valid number.\n";
 
                     cin.clear();
-
                     cin.ignore(
                         numeric_limits<streamsize>::max(),
                         '\n'
@@ -1253,7 +1253,6 @@ int main() {
                     cout << "\nInvalid input. Please enter a valid number.\n";
 
                     cin.clear();
-
                     cin.ignore(
                         numeric_limits<streamsize>::max(),
                         '\n'
@@ -1315,17 +1314,12 @@ int main() {
                 printMenuOption(3, "Sort by Stock (Quick Sort)");
 
                 cout << '\n';
-
                 printMenuOption(0, "Back to Main Menu", 12);
-
                 cout << '\n';
 
                 int sortChoice;
 
-                if (!readInteger(
-                    "Enter your choice: ",
-                    sortChoice
-                )) {
+                if (!readInteger("Enter your choice: ", sortChoice)) {
                     break;
                 }
 
@@ -1335,33 +1329,27 @@ int main() {
 
                     case 1:
 
-                        sortedProducts =
-                            insertionSortByBrand(products);
+                        sortedProducts = insertionSortByBrand(products);
 
                         cout << "\nSORTED BY BRAND\n";
-
                         displayProducts(sortedProducts);
 
                         break;
 
                     case 2:
 
-                        sortedProducts =
-                            quickSortByPrice(products);
+                        sortedProducts = quickSortByPrice(products);
 
                         cout << "\nSORTED BY PRICE\n";
-
                         displayProducts(sortedProducts);
 
                         break;
 
                     case 3:
 
-                        sortedProducts =
-                            quickSortByStock(products);
+                        sortedProducts = quickSortByStock(products);
 
                         cout << "\nSORTED BY STOCK\n";
-
                         displayProducts(sortedProducts);
 
                         break;
@@ -1370,7 +1358,6 @@ int main() {
                         break;
 
                     default:
-
                         cout << "\nInvalid sorting option.\n";
                 }
 
@@ -1414,9 +1401,7 @@ int main() {
 
                 // Synchronize dynamic catalog after checkout.
                 try {
-
                     dynamicCatalog.load(products);
-
                 }
                 catch (const bad_alloc&) {
 
@@ -1447,9 +1432,7 @@ int main() {
 
                 // Synchronize dynamic catalog after stock changes.
                 try {
-
                     dynamicCatalog.load(products);
-
                 }
                 catch (const bad_alloc&) {
 
@@ -1469,6 +1452,73 @@ int main() {
                     productIndex,
                     products
                 );
+
+                break;
+            }
+
+            // Official Brand Filtering.
+            case 10: {
+
+                clearScreen();
+
+                displayHeader(
+                    "OFFICIAL BRAND FILTER",
+                    "Find products by their official brand"
+                );
+
+                try {
+
+                    // Display available brands.
+                    displayAvailableBrands(products);
+
+                    cout << '\n';
+
+                    string selectedBrand;
+
+                    cout << "Enter official brand name: ";
+                    getline(cin, selectedBrand);
+
+                    // Reject empty or whitespace-only input.
+                    if (selectedBrand.find_first_not_of(" \t\n\r") ==
+                        string::npos) {
+
+                        cout << "\nBrand name cannot be empty.\n";
+                        break;
+                    }
+
+                    // Remove unnecessary spaces at the beginning and end.
+                    size_t first =
+                        selectedBrand.find_first_not_of(" \t\n\r");
+
+                    size_t last =
+                        selectedBrand.find_last_not_of(" \t\n\r");
+
+                    selectedBrand =
+                        selectedBrand.substr(first, last - first + 1);
+
+                    // Filter products using exact brand matching.
+                    vector<Item> filteredProducts =
+                        filterProductsByBrand(products, selectedBrand);
+
+                    cout << "\nBRAND FILTER RESULTS\n";
+
+                    cout << "Selected Brand: "
+                         << selectedBrand << '\n';
+
+                    if (filteredProducts.empty()) {
+
+                        cout << "\nNo products found for this brand.\n";
+                    }
+                    else {
+
+                        displayProducts(filteredProducts);
+                    }
+
+                }
+                catch (const bad_alloc&) {
+
+                    cout << "\nNot enough memory to perform brand filtering.\n";
+                }
 
                 break;
             }

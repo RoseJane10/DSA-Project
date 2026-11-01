@@ -12,6 +12,12 @@ std::vector<Item> linearSearchProducts(
     const std::string& keyword
 );
 
+// Official Brand Filtering
+std::vector<Item> filterProductsByBrand(
+    const std::vector<Item>& products,
+    const std::string& brand
+);
+
 // Lab 7: Binary Search for Price Range
 std::vector<Item> binarySearchPriceRange(
     const std::vector<Item>& products,

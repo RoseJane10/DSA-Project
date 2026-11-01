@@ -32,6 +32,10 @@ std::vector<Item> linearSearchProducts(
 
     std::string searchKeyword = toLowerCase(keyword);
 
+    if (searchKeyword.empty()) {
+        return results;
+    }
+
     // Check every product one by one.
     for (const Item& product : products) {
 
@@ -50,7 +54,35 @@ std::vector<Item> linearSearchProducts(
     }
 
     return results;
-} // IMPORTANT: Close Linear Search here!
+}
+
+// Official Brand Filtering
+std::vector<Item> filterProductsByBrand(
+    const std::vector<Item>& products,
+    const std::string& brand
+) {
+
+    std::vector<Item> results;
+
+    std::string selectedBrand = toLowerCase(brand);
+
+    if (selectedBrand.empty()) {
+        return results;
+    }
+
+    // Check every product for an exact brand match.
+    for (const Item& product : products) {
+
+        std::string productBrand =
+            toLowerCase(product.getBrand());
+
+        if (productBrand == selectedBrand) {
+            results.push_back(product);
+        }
+    }
+
+    return results;
+}
 
 // Lab 7: Binary Search for Price Range
 std::vector<Item> binarySearchPriceRange(
