@@ -3,6 +3,14 @@
 
 #include "Item.h"
 
+#include <vector>
+
+// A safe copy of one shopping cart entry.
+struct CartItem {
+    Item item;
+    int quantity;
+};
+
 class ShoppingCart {
 
 private:
@@ -42,6 +50,10 @@ public:
     void displayBackward();
 
     double calculateTotal() const;
+
+    // Checkout support
+    std::vector<CartItem> getItems() const;
+    void clearCart();
 
     bool isEmpty() const;
     int getSize() const;

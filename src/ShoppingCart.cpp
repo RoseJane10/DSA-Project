@@ -297,3 +297,39 @@ bool ShoppingCart::isEmpty() const {
 int ShoppingCart::getSize() const {
     return size;
 }
+
+
+// Return independent copies of cart items for checkout.
+vector<CartItem> ShoppingCart::getItems() const {
+
+    vector<CartItem> items;
+
+    items.reserve(size);
+
+    Node* temp = head;
+
+    while (temp != nullptr) {
+        items.push_back({temp->item, temp->quantity});
+        temp = temp->next;
+    }
+
+    return items;
+}
+
+// Remove all items after a successful checkout.
+void ShoppingCart::clearCart() {
+
+    Node* temp = head;
+
+    while (temp != nullptr) {
+        Node* nextNode = temp->next;
+        delete temp;
+        temp = nextNode;
+    }
+
+    head = nullptr;
+    tail = nullptr;
+    current = nullptr;
+    size = 0;
+}
+
