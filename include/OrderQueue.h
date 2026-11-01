@@ -44,6 +44,9 @@ public:
     bool dequeue(CustomerOrder& order);
     bool peek(CustomerOrder& order) const;
 
+// Remove the front order without copying it.
+    bool removeFront();
+
     void displayQueue() const;
 
     bool isEmpty() const;

@@ -127,3 +127,25 @@ bool OrderQueue::isEmpty() const {
 int OrderQueue::getSize() const {
     return size;
 }
+
+// Remove the first order without copying its contents.
+bool OrderQueue::removeFront() {
+
+    if (isEmpty()) {
+        return false;
+    }
+
+    Node* temp = front;
+
+    front = front->next;
+
+    delete temp;
+
+    size--;
+
+    if (front == nullptr) {
+        rear = nullptr;
+    }
+
+    return true;
+}

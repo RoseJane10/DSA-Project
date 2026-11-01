@@ -3,6 +3,7 @@
 
 #include "Database.h"
 #include "Item.h"
+#include "OrderQueue.h"
 
 #include <vector>
 
@@ -11,7 +12,6 @@ private:
     Database& database;
 
 public:
-
     InventoryRepository(Database& database);
 
     // Retrieve all products from PostgreSQL.
@@ -22,5 +22,13 @@ public:
         int productId,
         int expectedStock,
         int newStock
+    );
+
+    // Save an order, deduct stock, and calculate its total.
+    // All operations succeed together or are rolled back.
+    bool processOrder(
+        const CustomerOrder& order,
+        int& orderId,
+        double& orderTotal
     );
 };
