@@ -1149,7 +1149,7 @@ int main() {
 
         printCentered("INVENTORY MANAGEMENT", 13);
 
-        cout << '\n';
+                cout << '\n';
 
         printMenuOption(1, "View Complete Catalog");
         printMenuOption(2, "Search Products by Keyword");
@@ -1163,6 +1163,9 @@ int main() {
             currentUser.role == "staff") {
 
             printMenuOption(8, "Stock Management & Undo");
+        }
+        else {
+            printMenuOption(8, "Stock Management & Undo [RESTRICTED]", 8);
         }
 
         printMenuOption(9, "Search Product by ID");
